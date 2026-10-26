@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>メタルΩ∞理論システム 公開版ジェネレーター</title>
+<style>
+:root{--bg:#07070f;--card:#0f0f1c;--card2:#141428;--border:#2a2a3d;--text:#e5e7eb;--muted:#9ca3af;--accent:#8b5cf6;--cyan:#22d3ee;--gold:#fbbf24;--green:#22c55e;--red:#ef4444;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Yu Gothic UI","Hiragino Sans","Noto Sans JP","Meiryo",sans-serif;font-size:14px;line-height:1.6}
+.wrap{max-width:1180px;margin:0 auto;padding:18px}
+h1{font-size:1.35rem;margin:0 0 4px;background:linear-gradient(90deg,#c4b5fd,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--muted);font-size:.8rem;margin-bottom:14px}
+.step{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.step h2{font-size:.98rem;margin:0 0 10px;color:var(--cyan)}
+.step h2 .n{display:inline-block;background:var(--accent);color:#fff;border-radius:6px;padding:0 8px;margin-right:8px;font-size:.8rem}
+button{font-family:inherit;cursor:pointer;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:.84rem}
+button:disabled{opacity:.35;cursor:not-allowed}
+.btn-main{background:linear-gradient(135deg,#8b5cf6,#06b6d4);color:#fff}
+.btn-sub{background:#1e1e36;color:var(--text);border:1px solid var(--border)}
+.btn-go{background:linear-gradient(135deg,#22c55e,#059669);color:#00140a}
+textarea{width:100%;height:150px;background:#05050c;color:var(--text);border:1px solid var(--border);border-radius:8px;font-family:Consolas,monospace;font-size:.78rem;padding:8px}
+.msg{font-size:.8rem;margin-top:6px}.ok{color:var(--green)}.err{color:var(--red)}.warn{color:var(--gold)}
+.kv{display:grid;grid-template-columns:170px 1fr;gap:3px 10px;font-size:.78rem}.kv div:nth-child(odd){color:var(--muted)}
+.races{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.races button{background:#12122a;border:1px solid var(--border);color:var(--text);padding:5px 10px;font-size:.76rem}
+.races button.on{background:linear-gradient(135deg,#22c55e,#059669);color:#00140a}
+.vgrp{margin-top:6px;font-size:.74rem;font-weight:800}
+.opts label{margin-right:16px;font-size:.82rem}
+.checks{width:100%;border-collapse:collapse;font-size:.8rem}
+.checks td,.checks th{border:1px solid var(--border);padding:6px 8px;vertical-align:top}
+.checks th{background:#1a1a30;text-align:left}
+.pass{color:var(--green);font-weight:800}.fail{color:var(--red);font-weight:800}
+.diff{max-height:220px;overflow:auto;background:#05050c;border:1px solid var(--border);border-radius:8px;padding:8px;font-family:Consolas,monospace;font-size:.74rem;white-space:pre-wrap;margin-top:8px}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cmp .pane{border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#000}
+.cmp .pane h3{margin:0;padding:6px 10px;font-size:.8rem;background:#1a1a30}
+#mainFrame{width:100%;height:760px;border:0;background:#fff}
+#cmpPublic{height:760px;overflow:auto}
+.cl label{display:block;font-size:.84rem;margin:4px 0}
+.hidden{display:none}
+.outrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+/* ── 公開ビュー ── */
+.pv{background:linear-gradient(180deg,#0b0b1a,#0a0a14);color:#e5e7eb;padding:22px;border-radius:12px;width:1000px}
+.pv-sec{background:#101024;border:1px solid #2a2a44;border-radius:12px;padding:16px 18px;margin-bottom:14px}
+.pv-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #8b5cf6;padding-bottom:10px;margin-bottom:14px}
+.pv-brand{font-size:.8rem;color:#a78bfa;letter-spacing:.12em;font-weight:800}
+.pv-race{font-size:1.5rem;font-weight:900}
+.pv-race small{font-size:.9rem;color:#9ca3af;font-weight:600;margin-left:8px}
+.pv-date{color:#9ca3af;font-size:.85rem;text-align:right}
+.pv-title{font-size:1rem;font-weight:900;color:#22d3ee;margin:0 0 10px}
+.pv-badges{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.pv-badge{background:#17173a;border:1px solid #3b3b6b;border-radius:10px;padding:8px 16px;text-align:center;min-width:150px}
+.pv-badge .l{font-size:.64rem;color:#9ca3af;letter-spacing:.12em}
+.pv-badge .v{font-size:1.5rem;font-weight:800;color:#fbbf24;font-family:"Segoe UI",Arial,"Helvetica Neue",sans-serif}/* Ω（ギリシャ文字）が游ゴシックの極太でNのように見えるため、欧文フォントで表示 */
+.pv-badge .s{font-size:.78rem;color:#c4b5fd}
+.pv-alert{border-left:4px solid #8b5cf6;background:#16162e;border-radius:6px;padding:7px 10px;margin:6px 0;font-size:.82rem}
+.pv-alert.alert-king{border-color:#f59e0b}.pv-alert.alert-danger,.pv-alert.alert-kinsoku{border-color:#ef4444}.pv-alert.alert-hissho{border-color:#22c55e}.pv-alert.alert-baku{border-color:#d946ef}
+.pv-kv{display:flex;gap:18px;flex-wrap:wrap;font-size:.84rem;margin-top:8px}
+.pv-kv b{color:#fbbf24}
+.pv-t6{display:flex;gap:16px;align-items:flex-start}
+.pv-t6card{min-width:170px;text-align:center;background:#17173a;border:1px solid #3b3b6b;border-radius:10px;padding:10px}
+.pv-t6card .v{font-size:1.6rem;font-weight:900;color:#fbbf24}
+.pv-t6card .n{color:#c4b5fd;font-size:.85rem}
+.pv-t6 .d{font-size:.8rem;color:#d1d5db}.pv-t6 .st{margin-top:6px;font-size:.82rem;color:#fde68a}
+.pv-mo-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.om{font-family:"Segoe UI",Arial,"Helvetica Neue",sans-serif}/* 2026/10/24: 画面内のすべての Ω を欧文フォントで（omegaFont()） */
+.pv-mo-rank{font-size:1.4rem;font-weight:900;color:#fbbf24}.pv-mo-stars{color:#fbbf24}.pv-mo-strat{color:#c4b5fd;font-size:.85rem}
+.pv-mo-score{text-align:right}.pv-mo-score .big{font-size:2rem;font-weight:900;color:#22d3ee}
+.pv-comp{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:8px 0}
+.pv-comp div{background:#17173a;border-radius:8px;padding:6px;text-align:center;font-size:.7rem;color:#9ca3af}
+.pv-comp b{display:block;font-size:1.05rem;color:#e5e7eb}
+table.pv-t{width:100%;border-collapse:collapse;font-size:.8rem}
+table.pv-t th{background:#1e1e44;color:#c4b5fd;padding:5px 6px;border:1px solid #2a2a44;font-weight:700}
+table.pv-t td{padding:5px 6px;border:1px solid #2a2a44;text-align:center}
+table.pv-t td.l{text-align:left}
+table.pv-t td.nm{white-space:nowrap;text-align:left}
+.tag{display:inline-block;background:#26264a;border-radius:5px;padding:0 6px;margin:1px 2px;font-size:.72rem}
+.pv-sum{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
+.pv-sum div{background:#17173a;border-radius:8px;padding:8px;text-align:center}
+.pv-sum .l{font-size:.7rem;color:#9ca3af}.pv-sum .v{font-weight:900;font-size:1rem}
+.pv-warn{font-size:.8rem;background:#1c1c34;border-radius:6px;padding:6px 10px;margin:5px 0}
+.pv-bets{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pv-card{background:#15152e;border:1px solid #33335a;border-radius:10px;padding:10px 12px}
+.pv-card h4{margin:0 0 6px;font-size:.92rem}
+.pv-card .g{display:inline-block;background:#8b5cf6;color:#fff;border-radius:5px;padding:0 7px;margin-right:6px;font-size:.75rem}
+.pv-row{display:flex;gap:8px;align-items:center;margin:4px 0;font-size:.8rem}
+.pv-row .rl{min-width:92px;color:#9ca3af}
+.chip{display:inline-block;vertical-align:top;text-align:center;min-width:34px;background:#0c0c1e;border:1px solid #3b3b6b;border-radius:6px;padding:1px 5px;margin-right:3px;font-weight:900;font-size:.95rem;line-height:1.3;color:#e5e7eb}
+.chip > span{display:inline}
+.chip.hl{border-color:#a78bfa;background:#2a1f52}
+.chip small{display:block;font-size:.58rem;font-weight:600;color:#c4b5fd;min-height:.8em}
+.pv-note{font-size:.76rem;color:#d1d5db;border-top:1px dashed #33335a;margin-top:6px;padding-top:5px}
+.pv-extra{font-size:.74rem;color:#86efac}
+.pv-foot{font-size:.7rem;color:#9ca3af;text-align:center;margin-top:8px;border-top:1px solid #2a2a44;padding-top:8px}
+/* ── レース情報の固定バー（下へスクロールすると上部に表示） ── */
+#raceBar{position:fixed;top:0;left:0;right:0;z-index:999;background:rgba(11,11,26,.96);border-bottom:2px solid #8b5cf6;box-shadow:0 4px 14px rgba(0,0,0,.5);transform:translateY(-110%);transition:transform .2s;backdrop-filter:blur(6px)}
+#raceBar.show{transform:none}
+#raceBar .rb-in{max-width:1180px;margin:0 auto;padding:8px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#raceBar .rb-race{font-size:1.05rem;font-weight:900}
+#raceBar .rb-race small{font-size:.82rem;color:#9ca3af;font-weight:600;margin-left:8px}
+#raceBar .rb-date{color:#9ca3af;font-size:.78rem}
+#raceBar .rb-btn{margin-left:auto;background:#1e1e36;color:var(--text);border:1px solid var(--border);padding:4px 10px;font-size:.76rem}
+/* ── レースデータのファイル読み込み（ドラッグ＆ドロップ） ── */
+.dropwrap{position:relative}
+.dropwrap.drag textarea{border:2px dashed var(--cyan);background:#0a1420}
+.dropwrap .drophint{position:absolute;inset:0;display:none;align-items:center;justify-content:center;pointer-events:none;color:var(--cyan);font-weight:800;font-size:1rem;background:rgba(6,182,212,.08);border-radius:8px}
+.dropwrap.drag .drophint{display:flex}
+.filenote{font-size:.76rem;color:var(--muted);margin-bottom:6px}
+/* ── ページ上部へ戻るボタン ── */
+#toTop{position:fixed;right:20px;bottom:20px;z-index:1000;width:48px;height:48px;padding:0;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#06b6d4);color:#fff;font-size:1.3rem;line-height:48px;box-shadow:0 4px 14px rgba(0,0,0,.5);opacity:0;visibility:hidden;transform:translateY(10px);transition:opacity .2s,transform .2s,visibility .2s}
+#toTop.show{opacity:.9;visibility:visible;transform:none}
+#toTop:hover{opacity:1}
+/* ── レース選択へ移動するボタン（▲の上） ── */
+#toRacePick{position:fixed;right:20px;bottom:78px;z-index:1000;height:40px;padding:0 14px;border-radius:20px;background:linear-gradient(135deg,#059669,#0e7490);color:#fff;border:none;font-weight:800;font-size:.8rem;box-shadow:0 4px 14px rgba(0,0,0,.5);opacity:0;visibility:hidden;transform:translateY(10px);transition:opacity .2s,transform .2s,visibility .2s}
+#toRacePick.show{opacity:.95;visibility:visible;transform:none}
+#toRacePick:hover{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>メタルΩ∞理論システム 公開版ジェネレーター</h1>
+  <div class="sub">note・SNS公開用。本体アプリで計算した結果から、コンピ指数と、指数から逆算できる数値を取り除いて出力します。本体アプリのファイルは読み取るだけで、変更しません。</div>
+
+  <!-- STEP1 -->
+  <div class="step">
+    <h2><span class="n">1</span>本体アプリを読み込む</h2>
+    <input type="file" id="mainFile" accept=".html,.htm">
+    <div class="msg" id="mainMsg">metal-omega-infinity-FINAL.html を選択してください。</div>
+    <div class="kv hidden" id="mainInfo"></div>
+  </div>
+
+  <!-- STEP2 -->
+  <div class="step">
+    <h2><span class="n">2</span>レースデータを貼り付ける（手元データ・公開されません）</h2>
+    <div class="filenote">📂 競馬データのtxtファイル（例：2026年10月04日競馬データ.txt）を下の欄にドラッグ＆ドロップするか、<button type="button" class="btn-sub" id="btnFile" style="padding:3px 10px;font-size:.76rem">ファイルを選択</button> で読み込めます。複数ファイルもまとめて読み込めます。<input type="file" id="dataFile" accept=".txt,.tsv,.csv,text/plain" multiple class="hidden"></div>
+    <div class="dropwrap" id="dropWrap"><textarea id="dataIn" placeholder="本体アプリの「① 全データ一括貼り付け」と同じ形式で貼り付けてください（txtファイルのドラッグ＆ドロップも可）。1日分をまとめて貼ることもできます。"></textarea><div class="drophint">ここにファイルをドロップ</div></div>
+    <div class="outrow" style="margin-top:8px">
+      <button class="btn-main" id="btnRun" disabled>⚡ 本体で計算して公開版を作成</button>
+      <button class="btn-sub" id="btnClear">クリア</button>
+      <span class="opts"><label><input type="checkbox" id="optName" checked> 馬名を表示</label><label><input type="checkbox" id="optDanso" checked> 断層判定を表示</label></span>
+    </div>
+    <div class="msg" id="runMsg"></div>
+    <div id="raceList"></div>
+  </div>
+
+  <!-- STEP3 -->
+  <div class="step hidden" id="stepPreview">
+    <h2><span class="n">3</span>公開版プレビュー</h2>
+    <div style="overflow:auto"><div id="pv"></div></div>
+  </div>
+
+  <!-- STEP4 -->
+  <div class="step hidden" id="stepCheck">
+    <h2><span class="n">4</span>自動照合（C1〜C6）</h2>
+    <table class="checks" id="checkTable"></table>
+    <div class="diff hidden" id="diffBox"></div>
+  </div>
+
+  <!-- STEP5 -->
+  <div class="step hidden" id="stepFinal">
+    <h2><span class="n">5</span>最終確認（C7）— 本体と公開版を並べて確認してください</h2>
+    <div class="cmp">
+      <div class="pane"><h3>本体アプリ（計算結果）</h3><div id="frameSlot"></div></div>
+      <div class="pane"><h3>公開版</h3><div id="cmpPublic"></div></div>
+    </div>
+    <div class="cl" id="c7list" style="margin-top:10px"></div>
+  </div>
+
+  <!-- STEP6 -->
+  <div class="step hidden" id="stepOut">
+    <h2><span class="n">6</span>出力</h2>
+    <div class="outrow">
+      <button class="btn-go" id="btnPngAll" disabled>🖼 画像（全体1枚）</button>
+      <button class="btn-go" id="btnPngSec" disabled>🖼 画像（セクション別）</button>
+      <button class="btn-go" id="btnCopy" disabled>📋 買い目テキストをコピー</button>
+      <button class="btn-go" id="btnTxt" disabled>📄 買い目テキスト保存</button>
+      <button class="btn-go" id="btnReport" disabled>🧾 照合レポート保存</button>
+    </div>
+    <div class="msg" id="outMsg">C1〜C7 がすべて合格すると出力できます。</div>
+    <textarea id="betText" readonly style="height:170px;margin-top:8px"></textarea>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ════════════════════════════════════════════════
+//  設定
+// ════════════════════════════════════════════════
+const APP_VERSION='1.0.0';
+const REQ_IDS=['all-paste-area','result','badge-omega-val','badge-omega-sub','alert-row','sb-danso-label','sb-ds','t6-type-val','t6-type-name','t6-desc','t6-strategy','metal-omega-v2','result-tbody','bet-chips','bet-sheet-section','ri_date','ri_venue','ri_rnum','ri_name','ri_dist'];
+const REQ_FUNCS=['parseAllSmart','loadMultiRace','calc'];
+const REQ_CALC_KEYS=['n','score','mOmega'];
+const REQ_RJ_KEYS=['t6type','score','rank','confidence'];
+const BET_IDS=['tansho','fukusho','umaren','umatan','sanrenfuku','sanrentan','wide','anawide'];
+
+// ════════════════════════════════════════════════
+//  状態
+// ════════════════════════════════════════════════
+const S={html:null,sha:null,fileName:'',modified:'',frame:null,win:null,doc:null,src:null,pub:null,checks:null,raceIdx:null};
+const $=id=>document.getElementById(id);
+const norm=s=>String(s==null?'':s).replace(/[ 　]/g,' ').replace(/[ \t\r\n]+/g,' ').trim();
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+// ════════════════════════════════════════════════
+//  SHA-256（crypto.subtle が無い環境用のフォールバック付き）
+// ════════════════════════════════════════════════
+async function sha256(text){
+  const buf=new TextEncoder().encode(text);
+  if(window.crypto&&crypto.subtle){const h=await crypto.subtle.digest('SHA-256',buf);return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('');}
+  const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  let H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const l=buf.length,bl=((l+9+63)>>6)<<6,m=new Uint8Array(bl);m.set(buf);m[l]=0x80;const dv=new DataView(m.buffer);dv.setUint32(bl-4,l*8>>>0);dv.setUint32(bl-8,Math.floor(l/0x20000000));
+  const w=new Uint32Array(64),r=(x,n)=>(x>>>n)|(x<<(32-n));
+  for(let o=0;o<bl;o+=64){for(let i=0;i<16;i++)w[i]=dv.getUint32(o+i*4);for(let i=16;i<64;i++){const s0=r(w[i-15],7)^r(w[i-15],18)^(w[i-15]>>>3),s1=r(w[i-2],17)^r(w[i-2],19)^(w[i-2]>>>10);w[i]=(w[i-16]+s0+w[i-7]+s1)>>>0;}
+    let [a,b,c,d,e,f,g,h]=H;for(let i=0;i<64;i++){const S1=r(e,6)^r(e,11)^r(e,25),ch=(e&f)^(~e&g),t1=(h+S1+ch+K[i]+w[i])>>>0,S0=r(a,2)^r(a,13)^r(a,22),mj=(a&b)^(a&c)^(b&c),t2=(S0+mj)>>>0;h=g;g=f;f=e;e=(d+t1)>>>0;d=c;c=b;b=a;a=(t1+t2)>>>0;}
+    H=H.map((x,i)=>(x+[a,b,c,d,e,f,g,h][i])>>>0);}
+  return H.map(x=>x.toString(16).padStart(8,'0')).join('');
+}
+
+// ════════════════════════════════════════════════
+//  マスキング（コンピ指数・逆算可能な数値の除去）
+// ════════════════════════════════════════════════
+// 馬番に付く括弧内（ASCII括弧）は「N人気」と判定記号(S/A)だけ残す
+function maskHorseParen(t){
+  return t.replace(/(\d{1,2})\s*\(([^()]*)\)/g,(m,n,inner)=>{
+    // 指数・Δ・コンピ順位・EV・オッズ・前走→今走・場内平均を含まない括弧（例：💰回収107%）はそのまま残す
+    if(!/Δ|コンピ|指数|EV|倍|→|場内平均|score|\d+\.\d+(?!\s*%)|[+\-]\d/.test(inner))return m;
+    const keep=[];
+    const g=inner.match(/^\s*([SAB])\s*:/);if(g)keep.push(g[1]);
+    const p=inner.match(/(\d{1,2})人気/);if(p)keep.push(p[1]+'人気');
+    return keep.length?`${n}（${keep.join('・')}）`:n;
+  });
+}
+// シグナル文・注意文に使う共通マスク
+function maskText(t){
+  let s=String(t==null?'':t);
+  s=s.replace(/※参考:[^|｜]*?(?=$|\|)/g,'');            // 指数47の参考表示など（馬番と指数の対応）
+  s=maskHorseParen(s);
+  s=s.replace(/指数\s*\d+\s*\[[^\]]*\]/g,'');
+  s=s.replace(/大混戦ヒモ拡張（指数[\d・]+）/g,'大混戦ヒモ拡張');
+  s=s.replace(/1位指数\s*\d+/g,'1位指数');
+  s=s.replace(/6頭幅\s*\d+/g,'6頭幅');
+  s=s.replace(/断層\s*\d+(?=[（(・\s]|$)/g,'断層');
+  s=s.replace(/コンピ\s*\d+位(?!以)/g,'コンピ');
+  s=s.replace(/Δ\s*[+\-−]\s*\d+(?![〜~\d])/g,'Δ');
+  s=s.replace(/場内平均比?\s*[+\-]?\d+/g,'場内平均比');
+  s=s.replace(/EV\s*[=:]?\s*\d+(\.\d+)?/g,m=>/[≥≤]/.test(m)?m:'EV');
+  s=s.replace(/▲\s*\d+/g,'');
+  s=s.replace(/T6値\s*\d+(\.\d+)?/g,'T6値');
+  return norm(s);
+}
+// 荒れ度の説明文：オッズの値は非表示（仕様書§9-2）。「（朝の1番人気3.5倍・16頭）」→「（16頭）」
+function maskArComment(t){
+  return maskText(String(t||'').replace(/朝の1番人気\s*(?:[\d.]+倍|−)\s*・?/g,''));
+}
+// ランク列タグ・買い目ラベルのマスク
+function maskTag(t){
+  return norm(String(t||'')
+    .replace(/(Δ-[A-E])\s*[+\-−]?\d+/g,'$1')
+    .replace(/▲\s*\d+/g,'')
+    .replace(/(穴Δ(?:上昇)?)\s*[+\-]?\d+/g,'$1')
+    .replace(/Δ\s*[+\-−]\s*\d+/g,'Δ'));
+}
+
+// ════════════════════════════════════════════════
+//  本体の読み込み
+// ════════════════════════════════════════════════
+$('mainFile').addEventListener('change',async e=>{
+  const f=e.target.files[0];if(!f)return;
+  $('mainMsg').className='msg';$('mainMsg').textContent='読み込み中…';
+  S.html=await f.text();S.fileName=f.name;S.modified=new Date(f.lastModified).toLocaleString('ja-JP');
+  S.sha=await sha256(S.html);
+  const holder=$('frameSlot');holder.innerHTML='';
+  const fr=document.createElement('iframe');fr.id='mainFrame';
+  fr.onload=()=>{
+    S.frame=fr;S.win=fr.contentWindow;S.doc=fr.contentDocument;
+    const missId=REQ_IDS.filter(id=>!S.doc.getElementById(id));
+    const missFn=REQ_FUNCS.filter(n=>typeof S.win[n]!=='function');
+    $('mainInfo').classList.remove('hidden');
+    $('mainInfo').innerHTML=`<div>ファイル</div><div>${esc(S.fileName)}</div><div>更新日時</div><div>${esc(S.modified)}</div><div>SHA-256</div><div style="word-break:break-all">${S.sha}</div><div>構成チェック</div><div class="${missId.length||missFn.length?'err':'ok'}">${missId.length||missFn.length?'NG 不足: '+esc([...missId,...missFn].join(', ')):'OK（要素 '+REQ_IDS.length+'件・関数 '+REQ_FUNCS.length+'件）'}</div>`;
+    if(missId.length||missFn.length){$('mainMsg').className='msg err';$('mainMsg').textContent='本体の構成が想定と違います。公開版を使う前に仕様の見直しが必要です。';$('btnRun').disabled=true;return;}
+    $('mainMsg').className='msg ok';$('mainMsg').textContent='✅ 本体を読み込みました。';$('btnRun').disabled=false;
+  };
+  fr.srcdoc=S.html;holder.appendChild(fr);
+});
+
+function showMainError(err){
+  $('runMsg').className='msg err';
+  $('runMsg').textContent='⛔ 本体アプリの処理中にエラーが発生しました：'+(err&&err.message?err.message:err)+'（本体側の問題です。公開版では出力できません）';
+  resetOut();
+}
+// ════════════════════════════════════════════════
+//  計算実行
+// ════════════════════════════════════════════════
+async function waitCalc(){
+  for(let i=0;i<120;i++){await sleep(100);
+    const cr=S.win._calcResults,bs=S.doc.getElementById('bet-sheet-section');
+    if(cr&&cr.length&&S.win._raceJudgment&&bs&&bs.textContent.trim().length>0){await sleep(300);return true;}}
+  return false;
+}
+async function runOnce(fn){
+  S.win._calcResults=null;S.win._raceJudgment=null;
+  const bs=S.doc.getElementById('bet-sheet-section');if(bs)bs.innerHTML='';
+  try{fn();}catch(err){showMainError(err);return false;}
+  const ok=await waitCalc();
+  if(!ok){$('runMsg').className='msg err';$('runMsg').textContent='本体の計算結果を取得できませんでした（データ形式を確認してください）。';return false;}
+  build();return true;
+}
+$('btnRun').addEventListener('click',async()=>{
+  const txt=$('dataIn').value;if(!txt.trim()){$('runMsg').className='msg err';$('runMsg').textContent='データを貼り付けてください。';return;}
+  $('runMsg').className='msg';$('runMsg').textContent='本体で計算中…';$('raceList').innerHTML='';resetOut();
+  S.doc.getElementById('all-paste-area').value=txt;
+  S.win._multiRaces=null;S.win._calcResults=null;S.win._raceJudgment=null;
+  const bs=S.doc.getElementById('bet-sheet-section');if(bs)bs.innerHTML='';
+  try{S.win.parseAllSmart();}catch(err){showMainError(err);return;}
+  await sleep(250);
+  if(S.win._multiRaces&&S.win._multiRaces.length>1){renderRaceList();$('runMsg').className='msg ok';$('runMsg').textContent=S.win._multiRaces.length+'レースを検出しました。レースを選んでください。';return;}
+  const ok=await waitCalc();
+  if(!ok){$('runMsg').className='msg err';$('runMsg').textContent='本体の計算結果を取得できませんでした（データ形式を確認してください）。';return;}
+  $('runMsg').className='msg ok';$('runMsg').textContent='✅ 計算完了';build();
+});
+function renderRaceList(){
+  const btns=[...S.doc.querySelectorAll('#multi-race-picker .mr-btn')];
+  const groups={};
+  btns.forEach(b=>{const v=(b.getAttribute('title')||'').split(' ')[0]||'その他';(groups[v]=groups[v]||[]).push(b);});
+  let h='';
+  for(const v in groups){h+=`<div class="vgrp">${esc(v)}</div><div class="races">`+groups[v].map(b=>`<button data-i="${b.getAttribute('data-i')}">${esc(b.textContent)}</button>`).join('')+'</div>';}
+  $('raceList').innerHTML=h;
+  $('raceList').querySelectorAll('button').forEach(b=>b.addEventListener('click',async()=>{
+    $('raceList').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    resetOut();$('runMsg').className='msg';$('runMsg').textContent='本体で計算中…';
+    const i=parseInt(b.dataset.i);S.raceIdx=i;
+    const ok=await runOnce(()=>S.win.loadMultiRace(i));
+    if(ok){$('runMsg').className='msg ok';$('runMsg').textContent='✅ 計算完了：'+b.textContent;}
+  }));
+}
+$('btnClear').addEventListener('click',()=>{$('dataIn').value='';$('raceList').innerHTML='';$('runMsg').textContent='';resetOut();});
+['optName','optDanso'].forEach(id=>$(id).addEventListener('change',()=>{if(S.src)build();}));
+
+// ════════════════════════════════════════════════
+//  抽出（本体DOM → 生データ S.src。公開しない）
+// ════════════════════════════════════════════════
+const T=el=>el?norm(el.textContent):'';
+function extractSource(){
+  const d=S.doc,w=S.win,g=id=>d.getElementById(id);
+  const src={};
+  src.race={date:norm(g('ri_date').value),venue:norm(g('ri_venue').value),r:norm(g('ri_rnum').value),name:norm(g('ri_name').value),dist:norm(g('ri_dist').value)};
+  src.rank={val:T(g('badge-omega-val')),sub:T(g('badge-omega-sub'))};
+  src.alerts=[...g('alert-row').querySelectorAll(':scope > .alert')].map(a=>({cls:[...a.classList].find(c=>c.startsWith('alert-'))||'',icon:T(a.querySelector('.alert-icon')),text:T(a.querySelector(':scope > div'))}));
+  src.danso={label:T(g('sb-danso-label')),ds:T(g('sb-ds'))};
+  src.t6={type:T(g('t6-type-val')),name:T(g('t6-type-name')),desc:T(g('t6-desc')),strategy:T(g('t6-strategy'))};
+  const mo=g('metal-omega-v2');
+  src.mo={rank:T(mo.querySelector('.mo-rank-name')),stars:T(mo.querySelector('.mo-rank-stars')),strat:T(mo.querySelector('.mo-rank-strat')),score:T(mo.querySelector('.mo-score-big')),
+    comps:[...mo.querySelectorAll('.mo-comp-item')].map(c=>({label:T(c.querySelector('.mo-comp-label')),val:T(c.querySelector('.mo-comp-val')),max:T(c.querySelector('.mo-comp-max'))})),
+    horses:[...mo.querySelectorAll('table tbody tr')].map(tr=>[...tr.children].map(td=>T(td)))};
+  src.horses=[...g('result-tbody').querySelectorAll('tr')].map(tr=>{const td=tr.children;return{
+    n:T(td[0]),score:T(td[1]),  // 2026/10/17: 本体の「Ω∞グレード」「メタルΩ指数」「MetalΩ判定」列を削除
+    rankTags:[...td[2].querySelectorAll('span')].map(s=>T(s)),signal:T(td[3]),
+    bets:[...td[4].querySelectorAll('span')].map(s=>T(s)),breakdown:T(td[5])};});
+  src.names={};const hn=w._horseNames||{};for(const k in hn)src.names[k]=norm(hn[k]);
+  src.betChips=[...g('bet-chips').querySelectorAll('.bet-chip')].map(s=>T(s));
+  // 判定サマリー
+  const bss=g('bet-sheet-section');const root=bss.firstElementChild;
+  const blocks=root?[...root.children].filter(b=>b.children.length&&/^[①②③④⑤]/.test(T(b.firstElementChild))):[];
+  const blk=k=>blocks.find(b=>T(b.firstElementChild).startsWith(k));
+  const b1=blk('①'),b2=blk('②'),b3=blk('③'),b4=blk('④');
+  src.sum={title:root?T(root.firstElementChild):'',
+    race:b1?[...b1.children[1].querySelectorAll('span')].map(s=>T(s)):[],
+    horse:b2?[...b2.children[1].querySelectorAll('span')].map(s=>T(s)):[],
+    horseDetail:b2&&b2.children[2]?[...b2.children[2].querySelectorAll('span')].map(s=>T(s)):[],
+    conf:b3?[T(b3.children[1].querySelector('span')),T(b3.children[1].querySelector('div'))]:[],
+    warns:b3?[...b3.children].slice(2).map(x=>T(x)).filter(Boolean):[],
+    recs:b4?[...b4.children].slice(1).map(r=>{const sp=[...r.querySelectorAll('span')].map(s=>T(s));return sp.length?sp:[T(r)];}).filter(r=>r.join('')):[]};
+  // 買い目
+  src.bets=[...bss.querySelectorAll('.bsh-card')].map(c=>{
+    const bd=c.querySelector('.bsh-body');
+    return{id:(bd&&bd.id||'').replace('bsh-bd-',''),grade:T(c.querySelector('.bsh-grade')),name:T(c.querySelector('.bsh-head strong')),
+      icon:T(c.querySelector('.bsh-head span:not(.bsh-grade):not(.bsh-arrow)')),
+      rows:[...c.querySelectorAll('.bsh-row')].map(r=>({label:T(r.querySelector('.bsh-row-lbl')),chips:[...r.querySelectorAll('.bsh-chip')].map(ch=>({n:norm(ch.firstChild?ch.firstChild.textContent:''),lbl:T(ch.querySelector('.bsh-lbl')),hl:ch.classList.contains('bsh-chip-hl')}))})),
+      extra:[...c.querySelectorAll('.bsh-formation > div:not(.bsh-row)')].map(x=>T(x)),
+      note:T(c.querySelector('.bsh-note')),
+      // 2026/10/12: 荒れ度カードの説明文（本体の .bsh-empty）
+      // 2026/10/17: B型除外カードは本体の説明文（t6nの範囲を含む）を使わず、決まった文だけ
+      comment:/^荒れ度/.test(T(c.querySelector('.bsh-head strong')))?T(c.querySelector('.bsh-empty')):/^B型除外/.test(T(c.querySelector('.bsh-head strong')))?'この馬を含む買い目は買いません':''};});
+  // 照合用に本体JSオブジェクトから必要キーだけをホワイトリストで取得（指数などは取らない）
+  src.obj={calc:(w._calcResults||[]).map(h=>({n:h.n,score:h.score,mOmega:h.mOmega})),
+    rj:w._raceJudgment?{t6type:w._raceJudgment.t6type,score:w._raceJudgment.score,rank:w._raceJudgment.rank,confidence:w._raceJudgment.confidence}:null,
+    calcKeysOk:(w._calcResults&&w._calcResults[0])?REQ_CALC_KEYS.every(k=>k in w._calcResults[0]):false,
+    rjKeysOk:w._raceJudgment?REQ_RJ_KEYS.every(k=>k in w._raceJudgment):false};
+  // 漏えい検査用の「禁止値」（メモリ上のみ・出力しない）
+  const cr=w._calcResults||[];
+  src.secret={idx:cr.map(h=>h.idx).filter(v=>v!=null),prev:cr.map(h=>h.prev).filter(v=>v!=null&&v!=='-'),
+    cr:cr.map(h=>h.cr).filter(v=>v!=null),josho:cr.filter(h=>h.hasDelta).map(h=>h.josho_raw),
+    t6:T(g('t6-vals')),danso:T(g('sb-danso')),misshuu:T(g('sb-misshuu')),odds:cr.map(h=>h.odds).filter(v=>v!=null)};
+  return src;
+}
+
+// ════════════════════════════════════════════════
+//  公開データ作成（ホワイトリスト方式）
+// ════════════════════════════════════════════════
+function makePublic(src){
+  const showName=$('optName').checked,showDanso=$('optDanso').checked;
+  return{
+    race:{...src.race},
+    rank:{...src.rank},
+    alerts:src.alerts.map(a=>({cls:a.cls,icon:a.icon,text:maskText(a.text)})),
+    danso:showDanso?{label:src.danso.label,ds:src.danso.ds}:null,
+    t6:{type:src.t6.type,name:src.t6.name,desc:maskText(src.t6.desc),strategy:maskText(src.t6.strategy)},
+    mo:{rank:src.mo.rank,stars:src.mo.stars,strat:src.mo.strat,score:src.mo.score,comps:src.mo.comps.map(c=>({...c})),horses:src.mo.horses.map(r=>[...r])},
+    horses:src.horses.map(h=>({n:h.n,name:showName?(src.names[h.n]||''):'',score:h.score,rankTags:h.rankTags.map(maskTag).filter(Boolean),signal:maskTag(h.signal),bets:h.bets.map(maskTag)})),
+    betChips:[...src.betChips],
+    sum:{race:[...src.sum.race],horse:[...src.sum.horse],conf:[...src.sum.conf],warns:src.sum.warns.map(maskText),recs:src.sum.recs.map(r=>[...r])},
+    bets:src.bets.map(b=>{const cm=maskArComment(b.comment);return{id:b.id,grade:b.grade,name:b.name,icon:b.icon,rows:b.rows.map(r=>({label:r.label,chips:r.chips.map(c=>({n:c.n,lbl:maskTag(c.lbl),hl:c.hl}))})),extra:b.extra.map(maskText),note:maskText(b.note),...(cm?{comment:cm}:{})};}),
+    opts:{showName,showDanso}
+  };
+}
+
+// ════════════════════════════════════════════════
+//  描画
+// ════════════════════════════════════════════════
+function footerText(){const now=new Date();return `メタルΩ∞理論システム 解析結果｜コンピ指数そのものは掲載していません｜照合ID：${S.sha.slice(0,8)}-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;}
+function renderPublic(p,foot){
+  const F=(k,v)=>`<span data-f="${k}">${esc(v)}</span>`;
+  let h=`<div class="pv" id="pvRoot">`;
+  h+=`<div class="pv-head"><div><div class="pv-brand">METAL Ω∞ THEORY ─ 公開版</div><div class="pv-race">${F('race.venue',p.race.venue)} ${F('race.r',p.race.r)}<small>${F('race.name',p.race.name)} ${F('race.dist',p.race.dist)}</small></div></div><div class="pv-date">${F('race.date',p.race.date)}</div></div>`;
+  // 解析結果
+  h+=`<div class="pv-sec" data-sec="analysis"><div class="pv-title">■ 解析結果</div><div class="pv-badges"><div class="pv-badge"><div class="l">Ω∞ RACE RANK</div><div class="v">${F('rank.val',p.rank.val)}</div><div class="s">${F('rank.sub',p.rank.sub)}</div></div></div>`;
+  p.alerts.forEach((a,i)=>{h+=`<div class="pv-alert ${esc(a.cls)}">${F('alerts.'+i+'.icon',a.icon)} ${F('alerts.'+i+'.text',a.text)}</div>`;});
+  if(p.danso)h+=`<div class="pv-kv"><div>断層判定 <b>${F('danso.label',p.danso.label)}</b></div><div>Ω∞断層スコア <b>${F('danso.ds',p.danso.ds)}</b></div></div>`;
+  h+=`</div>`;
+  // T6
+  h+=`<div class="pv-sec" data-sec="t6"><div class="pv-title">■ レースタイプ判定（T6型）</div><div class="pv-t6"><div class="pv-t6card"><div class="v">${F('t6.type',p.t6.type)}</div><div class="n">${F('t6.name',p.t6.name)}</div></div><div><div class="d">${F('t6.desc',p.t6.desc)}</div><div class="st">${F('t6.strategy',p.t6.strategy)}</div></div></div></div>`;
+  // MetalΩ
+  h+=`<div class="pv-sec" data-sec="mo"><div class="pv-title">■ MetalΩ判定システム</div><div class="pv-mo-top"><div><div class="pv-mo-rank">${F('mo.rank',p.mo.rank)}</div><div class="pv-mo-stars">${F('mo.stars',p.mo.stars)}</div><div class="pv-mo-strat">${F('mo.strat',p.mo.strat)}</div></div><div class="pv-mo-score"><div style="font-size:.7rem;color:#9ca3af">BEST SCORE</div><div class="big">${F('mo.score',p.mo.score)}</div><div style="font-size:.75rem;color:#9ca3af">/ 100点</div></div></div>`;
+  h+=`<div class="pv-comp">`+p.mo.comps.map((c,i)=>`<div>${F('mo.comps.'+i+'.label',c.label)}<b>${F('mo.comps.'+i+'.val',c.val)}</b>${F('mo.comps.'+i+'.max',c.max)}</div>`).join('')+`</div>`;
+  h+=`<table class="pv-t"><thead><tr><th>馬番</th><th>MetalΩスコア</th><th>③波動</th><th>④逆転</th><th>判定ランク</th><th>評価</th></tr></thead><tbody>`+p.mo.horses.map((r,i)=>`<tr>`+r.map((c,j)=>`<td>${F('mo.horses.'+i+'.'+j,c)}</td>`).join('')+`</tr>`).join('')+`</tbody></table></div>`;
+  // 馬別スコア
+  h+=`<div class="pv-sec" data-sec="horses"><div class="pv-title">■ 馬別スコア一覧</div><table class="pv-t"><thead><tr><th>馬番</th>${p.opts.showName?'<th>馬名</th>':''}<th>Ω∞スコア</th><th>ランク</th><th>シグナル</th><th>この馬の買い目</th></tr></thead><tbody>`;
+  p.horses.forEach((x,i)=>{h+=`<tr><td><b>${F('horses.'+i+'.n',x.n)}</b></td>${p.opts.showName?`<td class="nm">${F('horses.'+i+'.name',x.name)}</td>`:''}<td>${F('horses.'+i+'.score',x.score)}</td><td class="l">${x.rankTags.map((t,j)=>`<span class="tag">${F('horses.'+i+'.rankTags.'+j,t)}</span>`).join('')}</td><td>${F('horses.'+i+'.signal',x.signal)}</td><td class="l">${x.bets.map((t,j)=>`<span class="tag">${F('horses.'+i+'.bets.'+j,t)}</span>`).join('')}</td></tr>`;});
+  h+=`</tbody></table></div>`;
+  // 判定サマリー＋買い目
+  h+=`<div class="pv-sec" data-sec="bets"><div class="pv-title">■ 判定サマリー・買い目</div>`;
+  if(p.betChips.length)h+=`<div class="pv-kv" style="margin:0 0 8px">RACE BETTING STRATEGY：${p.betChips.map((v,i)=>`<span class="tag">${F('betChips.'+i,v)}</span>`).join('')}</div>`;
+  h+=`<div class="pv-sum"><div><div class="l">① レース判定</div><div class="v">${p.sum.race.map((v,i)=>F('sum.race.'+i,v)).join(' ')}</div></div><div><div class="l">② 馬判定</div><div class="v">${p.sum.horse.map((v,i)=>F('sum.horse.'+i,v)).join(' ')}</div></div><div><div class="l">③ Confidence</div><div class="v">${p.sum.conf.map((v,i)=>F('sum.conf.'+i,v)).join(' ')}</div></div></div>`;
+  p.sum.warns.forEach((w,i)=>{h+=`<div class="pv-warn">${F('sum.warns.'+i,w)}</div>`;});
+  h+=`<div class="pv-kv" style="margin:6px 0 10px"><div>推奨馬券：${p.sum.recs.map((r,i)=>`<span class="tag">${r.map((v,j)=>F('sum.recs.'+i+'.'+j,v)).join(' ')}</span>`).join('')||'<span class="tag">見送り推奨</span>'}</div></div>`;
+  h+=`<div class="pv-bets">`;
+  p.bets.forEach((b,i)=>{
+    h+=`<div class="pv-card"><h4><span class="g">${F('bets.'+i+'.grade',b.grade)}</span>${F('bets.'+i+'.icon',b.icon)} ${F('bets.'+i+'.name',b.name)}</h4>`;
+    b.rows.forEach((r,j)=>{h+=`<div class="pv-row"><span class="rl">${F('bets.'+i+'.rows.'+j+'.label',r.label)}</span><span>`+r.chips.map((c,k)=>`<span class="chip${c.hl?' hl':''}">${F('bets.'+i+'.rows.'+j+'.chips.'+k+'.n',c.n)}<small>${F('bets.'+i+'.rows.'+j+'.chips.'+k+'.lbl',c.lbl)}</small></span>`).join('')+`</span></div>`;});
+    if(b.comment)h+=`<div class="pv-extra">${F('bets.'+i+'.comment',b.comment)}</div>`;
+    b.extra.forEach((x,j)=>{h+=`<div class="pv-extra">${F('bets.'+i+'.extra.'+j,x)}</div>`;});
+    h+=`<div class="pv-note">${F('bets.'+i+'.note',b.note)}</div></div>`;});
+  h+=`</div></div>`;
+  h+=`<div class="pv-foot">${esc(foot)}</div></div>`;
+  return h;
+}
+
+// ════════════════════════════════════════════════
+//  照合
+// ════════════════════════════════════════════════
+function flatten(o,pre='',out={}){
+  if(o===null||o===undefined)return out;
+  if(Array.isArray(o)){o.forEach((v,i)=>flatten(v,pre+(pre?'.':'')+i,out));return out;}
+  if(typeof o==='object'){for(const k in o){if(k==='opts'||k==='hl'||k==='cls'||k==='id')continue;flatten(o[k],pre+(pre?'.':'')+k,out);}return out;}
+  out[pre]=norm(o);return out;
+}
+function runChecks(){
+  const R={},diffs=[];
+  // C1 ソース一致：本体DOMを読み直し、同じマスクを掛けた結果が公開データと完全一致するか
+  const fresh=makePublic(extractSource());
+  const a=flatten(S.pub),b=flatten(fresh);
+  const keys=new Set([...Object.keys(a),...Object.keys(b)]);let n1=0,bad1=0;
+  keys.forEach(k=>{n1++;if(a[k]!==b[k]){bad1++;diffs.push(`[C1] ${k}\n  公開版: ${a[k]}\n  本体  : ${b[k]}`);}});
+  R.C1={ok:bad1===0&&n1>0,msg:`${n1}項目中 不一致 ${bad1}件`};
+  // C2 二重経路：画面(DOM)の値と本体JSオブジェクトの値
+  const src=S.src,o=src.obj;let bad2=0,n2=0;const e2=(k,x,y)=>{n2++;if(norm(x)!==norm(y)){bad2++;diffs.push(`[C2] ${k}\n  画面: ${x}\n  内部: ${y}`);}};
+  if(!o.calcKeysOk||!o.rjKeysOk){bad2++;diffs.push('[C2] 本体の内部データに必要なキーがありません');}
+  const domN=src.horses.map(h=>h.n).sort((x,y)=>x-y).join(','),objN=o.calc.map(h=>String(h.n)).sort((x,y)=>x-y).join(',');
+  e2('馬番の集合',domN,objN);
+  src.horses.forEach(h=>{const c=o.calc.find(x=>String(x.n)===h.n);if(!c){e2('馬番'+h.n,h.n,'(なし)');return;}e2(`馬番${h.n} Ω∞スコア`,h.score,c.score+'pt');});
+  if(o.rj){e2('T6型',src.t6.type,o.rj.t6type+'タイプ');e2('①レース判定 T6',src.sum.race[1]||'','T6-'+o.rj.t6type);e2('②馬判定 グレード',src.sum.horse[1]||'',o.rj.rank);e2('②馬判定 pt',src.sum.horse[2]||'',o.rj.score+'pt');e2('③Confidence',src.sum.conf[0]||'',o.rj.confidence+'%');}
+  R.C2={ok:bad2===0,msg:`${n2}項目中 不一致 ${bad2}件`};
+  // C3 買い目：本体カードを独立した読み方（ID起点）で読み直し、馬番の並びを順序込みで比較
+  let bad3=0,n3=0;const d=S.doc;
+  const mainCards=BET_IDS.map(id=>{const bd=d.getElementById('bsh-bd-'+id);if(!bd)return null;
+    return{id,rows:[...bd.querySelectorAll('.bsh-row')].map(r=>T(r.querySelector('.bsh-row-lbl'))+':'+[...r.querySelectorAll('.bsh-chip')].map(c=>norm(c.childNodes[0].textContent)).join('・'))};}).filter(Boolean);
+  const pubCards=S.pub.bets.filter(b=>b.id).map(b=>({id:b.id,rows:b.rows.map(r=>r.label+':'+r.chips.map(c=>c.n).join('・'))}));
+  n3++;if(mainCards.map(c=>c.id).join(',')!==pubCards.map(c=>c.id).join(',')){bad3++;diffs.push(`[C3] カード構成\n  公開版: ${pubCards.map(c=>c.id)}\n  本体  : ${mainCards.map(c=>c.id)}`);}
+  mainCards.forEach(m=>{const p=pubCards.find(x=>x.id===m.id);n3++;const mj=m.rows.join(' | '),pj=p?p.rows.join(' | '):'(なし)';if(mj!==pj){bad3++;diffs.push(`[C3] ${m.id}\n  公開版: ${pj}\n  本体  : ${mj}`);}});
+  const horseSet=new Set(src.horses.map(h=>h.n));
+  S.pub.bets.forEach(b=>b.rows.forEach(r=>r.chips.forEach(c=>{if(!horseSet.has(c.n)){bad3++;diffs.push(`[C3] ${b.id} 馬番${c.n} が出走馬にありません`);}})));
+  R.C3={ok:bad3===0&&mainCards.length>0,msg:`${mainCards.length}券種 / 不一致 ${bad3}件`};
+  // C4 描画後照合：公開ビューの表示文字を data-f から読み直して公開データと比較
+  const root=$('pv');const shown={};root.querySelectorAll('[data-f]').forEach(el=>{shown[el.dataset.f]=norm(el.textContent);});
+  let bad4=0,n4=0;Object.keys(a).forEach(k=>{if(k.startsWith('opts'))return;n4++;if(shown[k]!==a[k]){bad4++;diffs.push(`[C4] ${k}\n  表示: ${shown[k]}\n  データ: ${a[k]}`);}});
+  R.C4={ok:bad4===0&&n4>0,msg:`${n4}項目中 不一致 ${bad4}件`};
+  // C5 漏えい検査
+  const leaks=leakScan(root.textContent+'\n'+betText(S.pub)+'\n'+Object.values(flatten(S.pub)).join('\n'),src.secret);
+  leaks.forEach(l=>diffs.push('[C5] '+l));
+  R.C5={ok:leaks.length===0,msg:`検出 ${leaks.length}件`};
+  // C6 版・構成
+  const missId=REQ_IDS.filter(id=>!S.doc.getElementById(id));
+  R.C6={ok:!!S.sha&&missId.length===0&&o.calcKeysOk&&o.rjKeysOk&&!!src.race.date&&!!src.race.venue&&!!src.race.r,msg:`SHA-256 ${S.sha.slice(0,12)}… / 要素不足 ${missId.length}件 / レース ${src.race.date} ${src.race.venue}${src.race.r}`};
+  if(!src.race.date||!src.race.venue||!src.race.r)diffs.push('[C6] レース情報（日付・会場・R）が取得できません');
+  return{R,diffs};
+}
+function leakScan(text,sec){
+  const t=norm(text),hits=[];
+  const gen=[[/T6値\s*\d/,'T6値の数値'],[/断層値|密集値/,'断層値・密集値の表記'],[/\d+位指数\s*\d/,'順位指数の数値'],[/Gap\s*\d/,'Gap値'],[/シャープ\s*×/,'シャープ値'],[/EV\s*[=:]?\s*\d/,'EV値'],
+    [/Δ\s*[+\-−]\s*\d+(?![〜~\d])/,'Δ値'],[/▲\s*\d/,'Δ値(▲)'],[/コンピ\s*\d+位(?!以)/,'コンピ順位'],[/場内平均比?\s*[+\-]?\d/,'場内平均Δ'],[/指数\s*\d+\s*\[/,'馬別指数'],[/\(\s*\d+\s*→\s*\d+\s*\)/,'前走→今走'],[/上昇\s*[+\-]\d+\s*\(/,'上昇内訳'],[/\d+(\.\d+)?倍\)/,'馬別オッズ'],[/補正あり/,'T6補正式']];
+  gen.forEach(([re,l])=>{const m=t.match(re);if(m)hits.push(`${l}：「${m[0]}」`);});
+  // レース固有の値（前後の文脈つき）
+  const ctx=(v,words)=>words.some(w=>new RegExp(w+'\\s*'+String(v).replace('.','\\.')+'(?![0-9〜~・以])').test(t));
+  [...new Set(sec.idx)].forEach(v=>{if(ctx(v,['指数','コンピ']))hits.push(`指数値 ${v} が文脈つきで出現`);});
+  [...new Set(sec.josho)].forEach(v=>{if(ctx((v>=0?'\\+':'-')+Math.abs(v),['Δ','上昇']))hits.push(`Δ値 ${v} が出現`);});
+  const t6n=(sec.t6.match(/\d+(\.\d+)?/)||[])[0];if(t6n&&new RegExp('T6[^0-9]{0,4}'+t6n.replace('.','\\.')+'(?![0-9〜~])').test(t))hits.push(`T6値 ${t6n} が出現`);
+  if(sec.danso&&new RegExp('断層[^0-9≥≤＞＜>]{0,3}'+sec.danso+'(?![0-9以〜~\\-－・])').test(t))hits.push(`断層値 ${sec.danso} が出現`);
+  [...new Set(sec.odds)].forEach(v=>{if(new RegExp('[/(（]\\s*'+String(v).replace('.','\\.')+'倍').test(t))hits.push(`オッズ ${v}倍 が出現`);});
+  return hits;
+}
+
+// ════════════════════════════════════════════════
+//  メイン処理
+// ════════════════════════════════════════════════
+// 2026/10/24: Ω（ギリシャ文字）は游ゴシックの太字だとNのように見えるため、文字の部分だけ欧文フォントの <span class="om"> で包む
+// （文字そのものは変えないので、C1〜C6 の照合・コピー用テキストには影響しない）
+function omegaFont(root){
+  if(!root)return;
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.nodeValue.includes('Ω')&&!(n.parentNode&&n.parentNode.classList&&n.parentNode.classList.contains('om'))&&!/^(SCRIPT|STYLE|TEXTAREA|TITLE|OPTION)$/.test(n.parentNode.nodeName)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT});
+  const ns=[];while(w.nextNode())ns.push(w.currentNode);
+  ns.forEach(n=>{const f=document.createDocumentFragment();n.nodeValue.split(/(Ω)/).forEach(s=>{if(!s)return;if(s==='Ω'){const e=document.createElement('span');e.className='om';e.textContent='Ω';f.appendChild(e);}else f.appendChild(document.createTextNode(s));});n.parentNode.replaceChild(f,n);});
+}
+function build(){
+  S.src=extractSource();S.pub=makePublic(S.src);if(window.__raceBarUpdate)setTimeout(window.__raceBarUpdate,0);
+  const foot=footerText();S.foot=foot;
+  $('pv').innerHTML=renderPublic(S.pub,foot);
+  $('stepPreview').classList.remove('hidden');
+  const {R,diffs}=runChecks();S.checks=R;S.diffs=diffs;
+  const L={C1:'ソース一致（本体を読み直して比較）',C2:'二重経路照合（画面⇔内部データ）',C3:'買い目照合（馬番の並び・券種）',C4:'描画後照合（表示⇔公開データ）',C5:'漏えい検査（指数・逆算値）',C6:'版・構成の記録'};
+  $('checkTable').innerHTML='<tr><th>No</th><th>検査</th><th>結果</th><th>詳細</th></tr>'+Object.keys(L).map(k=>`<tr><td>${k}</td><td>${L[k]}</td><td class="${R[k].ok?'pass':'fail'}">${R[k].ok?'合格':'不合格'}</td><td>${esc(R[k].msg)}</td></tr>`).join('');
+  $('stepCheck').classList.remove('hidden');
+  if(diffs.length){$('diffBox').classList.remove('hidden');$('diffBox').textContent=diffs.join('\n');}else{$('diffBox').classList.add('hidden');}
+  // C7
+  $('stepFinal').classList.remove('hidden');
+  try{S.doc.getElementById('result').scrollIntoView({block:'start'});}catch(e){}
+  $('cmpPublic').innerHTML=renderPublic(S.pub,foot).replace(/data-f=/g,'data-g=').replace('id="pvRoot"','');
+  const items=['レース情報（日付・場・R・レース名）が本体と同じ','RACE RANK・T6型・MetalΩ判定ランクが本体と同じ','馬別スコア一覧の並び順と上位3頭のスコアが本体と同じ','単勝の軸・対抗の馬番が本体と同じ','買い目の全カードの馬番が本体と同じ','コンピ指数・T6値・Δ値などの数値が公開版に出ていない'];
+  $('c7list').innerHTML=items.map((t,i)=>`<label><input type="checkbox" class="c7" data-i="${i}"> ${esc(t)}</label>`).join('');
+  $('c7list').querySelectorAll('.c7').forEach(c=>c.addEventListener('change',updateOut));
+  omegaFont(document.body);
+  $('betText').value=betText(S.pub);
+  $('stepOut').classList.remove('hidden');
+  updateOut();
+}
+function allAutoOk(){return S.checks&&Object.values(S.checks).every(x=>x.ok);}
+function c7Ok(){const c=[...document.querySelectorAll('.c7')];return c.length>0&&c.every(x=>x.checked);}
+function updateOut(){
+  const ok=allAutoOk()&&c7Ok();
+  ['btnPngAll','btnPngSec','btnCopy','btnTxt','btnReport'].forEach(id=>$(id).disabled=!ok);
+  $('outMsg').className='msg '+(ok?'ok':(allAutoOk()?'warn':'err'));
+  $('outMsg').textContent=ok?'✅ C1〜C7 すべて合格。出力できます。':(allAutoOk()?'C1〜C6 は合格です。C7 のチェックをすべて入れると出力できます。':'⛔ 自動照合に不合格があります。出力できません（差分を確認してください）。');
+}
+function resetOut(){S.src=null;S.pub=null;S.checks=null;if(window.__raceBarUpdate)setTimeout(window.__raceBarUpdate,0);['stepPreview','stepCheck','stepFinal','stepOut'].forEach(id=>$(id).classList.add('hidden'));}
+
+// ════════════════════════════════════════════════
+//  出力
+// ════════════════════════════════════════════════
+function betText(p){
+  const L=[];L.push(`【${p.race.venue}${p.race.r} ${p.race.name}】メタルΩ∞理論 解析結果`);
+  L.push(`レースランク：${p.rank.val}（${p.rank.sub}）／ T6型：${p.t6.type}（${p.t6.name}）／ ${p.mo.rank} ${p.mo.stars}`);
+  L.push(`判定：①${p.sum.race.join(' ')} ②${p.sum.horse.join(' ')} ③${p.sum.conf.join(' ')}`);
+  {const ar=p.bets.find(b=>!b.id&&/^荒れ度/.test(b.name||''));if(ar)L.push(ar.name.replace(/\s+/,'：')+(ar.comment?`（${ar.comment.replace(/（\d+頭）$/,'')}）`:''));}  // 2026/10/04: 荒れ度（①固い〜④荒れ）
+  {const bx=p.bets.find(b=>!b.id&&/^B型除外/.test(b.name||''));if(bx)L.push(bx.name.replace(/\s+/,'：')+'（この馬を含む買い目は買いません）');}  // 2026/10/17: B型穴馬除外
+  L.push('── 買い目 ──');
+  p.bets.filter(b=>b.id&&b.rows.length).forEach(b=>{L.push(`${b.icon}${b.name}（${b.grade}）：`+b.rows.map(r=>`${r.label} ${r.chips.map(c=>c.n).join('・')}`).join(' ／ '));});
+  L.push('');L.push(S.foot||'');
+  return L.join('\n');
+}
+function fname(ext){const r=S.pub.race;return `メタルΩ∞公開版_${(r.date||'').replace(/\//g,'')}_${r.venue}${r.r}.${ext}`;}
+function download(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);}
+function guard(){if(!(allAutoOk()&&c7Ok())){alert('照合が完了していないため出力できません。');return false;}return true;}
+$('btnCopy').addEventListener('click',async()=>{if(!guard())return;try{await navigator.clipboard.writeText($('betText').value);$('outMsg').textContent='📋 コピーしました';}catch(e){$('betText').select();document.execCommand('copy');$('outMsg').textContent='📋 コピーしました';}});
+$('btnTxt').addEventListener('click',()=>{if(!guard())return;download(fname('txt'),new Blob([$('betText').value],{type:'text/plain'}));});
+$('btnReport').addEventListener('click',()=>{if(!guard())return;
+  const rep={race:{date:S.pub.race.date,venue:S.pub.race.venue,r:S.pub.race.r,name:S.pub.race.name},
+    source:{file:S.fileName,sha256:S.sha,modified:S.modified},generator:{name:'metal-omega-public',version:APP_VERSION},
+    generatedAt:new Date().toISOString(),checks:Object.fromEntries(Object.entries(S.checks).map(([k,v])=>[k,(v.ok?'OK':'NG')+' '+v.msg])),C7:'OK（目視チェック6項目）',result:'PASS'};
+  download(fname('json').replace('.json','_照合レポート.json'),new Blob([JSON.stringify(rep,null,2)],{type:'application/json'}));});
+function loadH2C(){return new Promise((res,rej)=>{if(window.html2canvas)return res();const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';s.onload=res;s.onerror=()=>rej(new Error('html2canvas を読み込めません（インターネット接続を確認してください）'));document.head.appendChild(s);});}
+async function toPng(el,name){await loadH2C();const c=await html2canvas(el,{backgroundColor:'#0a0a14',scale:1.28,useCORS:true});return new Promise(r=>c.toBlob(b=>{download(name,b);r();},'image/png'));}
+$('btnPngAll').addEventListener('click',async()=>{if(!guard())return;try{await toPng($('pvRoot'),fname('png'));}catch(e){$('outMsg').className='msg err';$('outMsg').textContent=e.message;}});
+$('btnPngSec').addEventListener('click',async()=>{if(!guard())return;
+  try{const secs=[...$('pvRoot').querySelectorAll('.pv-sec')];const labels={analysis:'1_解析結果',t6:'2_レースタイプ',mo:'3_MetalΩ判定',horses:'4_馬別スコア',bets:'5_判定サマリー買い目'};
+    for(const s of secs){
+      const box=document.createElement('div');box.className='pv';box.style.position='absolute';box.style.left='-99999px';
+      box.innerHTML=$('pvRoot').querySelector('.pv-head').outerHTML+s.outerHTML+`<div class="pv-foot">${esc(S.foot)}</div>`;
+      document.body.appendChild(box);await toPng(box,fname('png').replace('.png','_'+labels[s.dataset.sec]+'.png'));box.remove();await sleep(200);}
+  }catch(e){$('outMsg').className='msg err';$('outMsg').textContent=e.message;}});
+
+// テスト・自動化用の窓口（バッチ検証で使用。画面操作と同じ処理を呼ぶだけ）
+omegaFont(document.body);  // 2026/10/24: 最初から画面にある Ω（見出しなど）
+window.__pub={state:S,build,runChecks,maskText,maskTag,leakScan,betText};
+
+// ページ上部へ戻るボタン（300px以上スクロールしたら表示）
+(function(){
+  const b=document.createElement('button');b.id='toTop';b.type='button';b.title='ページの上部へ戻る';b.setAttribute('aria-label','ページの上部へ戻る');b.textContent='▲';
+  b.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+  document.body.appendChild(b);
+  const upd=()=>b.classList.toggle('show',window.scrollY>300);
+  window.addEventListener('scroll',upd,{passive:true});upd();
+})();
+// レース選択へ移動するボタン（▲の上。レース一覧があり、それが画面外のときだけ表示）
+(function(){
+  const b=document.createElement('button');b.id='toRacePick';b.type='button';b.title='レース選択へ';b.textContent='🏇 レース選択';
+  b.addEventListener('click',()=>{const t=$('raceList');const y=t.getBoundingClientRect().top+window.scrollY-80;window.scrollTo({top:y,behavior:'smooth'});});
+  document.body.appendChild(b);
+  const upd=()=>{const t=$('raceList');if(!t||!t.children.length){b.classList.remove('show');return;}const r=t.getBoundingClientRect();b.classList.toggle('show',r.bottom<0||r.top>window.innerHeight);};
+  window.addEventListener('scroll',upd,{passive:true});window.addEventListener('resize',upd);
+  new MutationObserver(upd).observe($('raceList'),{childList:true});upd();
+})();
+// レース情報の固定バー（公開版プレビューの見出しが画面外に出たら上部に固定表示）
+(function(){
+  const bar=document.createElement('div');bar.id='raceBar';
+  bar.innerHTML='<div class="rb-in"><div class="rb-date"></div><div class="rb-race"></div><button type="button" class="rb-btn">🏇 レース選択へ</button></div>';
+  document.body.appendChild(bar);
+  bar.querySelector('.rb-btn').addEventListener('click',()=>{const t=$('raceList').children.length?$('raceList'):$('dataIn');const y=t.getBoundingClientRect().top+window.scrollY-80;window.scrollTo({top:y,behavior:'smooth'});});
+  let key='';
+  const upd=()=>{
+    const r=S.pub&&S.pub.race,pv=$('stepPreview');
+    if(!r||pv.classList.contains('hidden')){bar.classList.remove('show');return;}
+    const k=[r.date,r.venue,r.r,r.name,r.dist].join('|');
+    if(k!==key){key=k;bar.querySelector('.rb-date').textContent=r.date;bar.querySelector('.rb-race').innerHTML=`${esc(r.venue)} ${esc(r.r)}<small>${esc(r.name)} ${esc(r.dist)}</small>`;}
+    const head=pv.querySelector('.pv-head');
+    bar.classList.toggle('show',(head||pv).getBoundingClientRect().bottom<0);
+  };
+  window.addEventListener('scroll',upd,{passive:true});
+  window.__raceBarUpdate=upd;upd();
+})();
+// レースデータのファイル読み込み（ドラッグ＆ドロップ／ファイル選択。読み込んだら自動で計算）
+(function(){
+  const wrap=$('dropWrap'),inp=$('dataFile');
+  const decode=buf=>{try{return new TextDecoder('utf-8',{fatal:true}).decode(buf);}catch(e){return new TextDecoder('shift_jis').decode(buf);}};
+  async function load(files){
+    files=[...files].filter(f=>/\.(txt|tsv|csv)$/i.test(f.name)||f.type.startsWith('text/'));
+    if(!files.length){$('runMsg').className='msg err';$('runMsg').textContent='txtファイルを選んでください。';return;}
+    files.sort((a,b)=>a.name.localeCompare(b.name,'ja'));
+    const texts=[];for(const f of files)texts.push(decode(await f.arrayBuffer()).replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n').trim());
+    $('dataIn').value=texts.join('\n\n');
+    const names=files.map(f=>f.name).join('、');
+    if($('btnRun').disabled){$('runMsg').className='msg warn';$('runMsg').textContent='📂 読み込みました：'+names+'（先に STEP1 で本体アプリを読み込むと計算できます）';return;}
+    $('runMsg').className='msg';$('runMsg').textContent='📂 読み込みました：'+names;
+    $('btnRun').click();
+  }
+  $('btnFile').addEventListener('click',()=>inp.click());
+  inp.addEventListener('change',()=>{if(inp.files.length)load(inp.files);inp.value='';});
+  let depth=0;
+  wrap.addEventListener('dragenter',e=>{e.preventDefault();depth++;wrap.classList.add('drag');});
+  wrap.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='copy';});
+  wrap.addEventListener('dragleave',()=>{if(--depth<=0){depth=0;wrap.classList.remove('drag');}});
+  wrap.addEventListener('drop',e=>{e.preventDefault();depth=0;wrap.classList.remove('drag');if(e.dataTransfer.files.length)load(e.dataTransfer.files);});
+  // 欄の外にファイルを落としてもページが切り替わらないようにする（本体アプリのファイル選択欄は除く）
+  ['dragover','drop'].forEach(t=>window.addEventListener(t,e=>{if(e.target.closest&&(e.target.closest('#dropWrap')||e.target.id==='mainFile'))return;if(e.dataTransfer&&[...e.dataTransfer.types].includes('Files'))e.preventDefault();}));
+})();
+</script>
+</body>
+</html>
